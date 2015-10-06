@@ -12,6 +12,16 @@
 #include <signal.h>
 
 int main(int argc, char **argv) {
+    
+    
+    char buffer[1024];
+    int continueloop = 0;
+
+    while(continueloop == 0){
+        printf("Type away: ");
+        fgets(buffer, 1024, stdin);
+    }
+
 
     return 0;
 }
