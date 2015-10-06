@@ -13,6 +13,34 @@
 
 /* Hey Tom-O */
 
+
+char** tokenify(const char *s) {
+    char* copy = strdup(s);
+    const char* whitespace= " \t\n";
+    char* token;
+    int numtoks = 0;
+    for(token = strtok(copy, whitespace);
+        token != NULL; 
+        token = strtok(NULL, whitespace)){
+
+            numtoks++;
+        }
+    char* copy2 = strdup(s);
+    char** tokens = malloc(sizeof(char*)*(numtoks+1));
+    int current_tok = 0;
+    for(token = strtok(copy2, whitespace);
+        token != NULL; 
+        token = strtok(NULL, whitespace)){
+
+            tokens[current_tok] = strdup(token);
+            current_tok++;
+        }
+    tokens[current_tok] = NULL;
+    free(copy);
+    free(copy2);
+    return tokens;
+}
+
 int main(int argc, char **argv) {
     
     
