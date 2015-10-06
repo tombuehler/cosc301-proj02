@@ -12,23 +12,22 @@
 #include <signal.h>
 
 
-char** tokenify(const char *s) {
+char** tokenify(const char *s, const char* delim) {
     char* copy = strdup(s);
-    const char* whitespace= " \t\n";
     char* token;
     int numtoks = 0;
-    for(token = strtok(copy, whitespace);
+    for(token = strtok(copy, delim);
         token != NULL; 
-        token = strtok(NULL, whitespace)){
+        token = strtok(NULL, delim)){
 
             numtoks++;
         }
     char* copy2 = strdup(s);
     char** tokens = malloc(sizeof(char*)*(numtoks+1));
     int current_tok = 0;
-    for(token = strtok(copy2, whitespace);
+    for(token = strtok(copy2, delim);
         token != NULL; 
-        token = strtok(NULL, whitespace)){
+        token = strtok(NULL, delim)){
 
             tokens[current_tok] = strdup(token);
             current_tok++;
@@ -40,10 +39,10 @@ char** tokenify(const char *s) {
 }
 
 int main(int argc, char **argv) {
-    
+    const char* whitespace= " \t\n";
     char buffer[1024];
     int continueloop = 0;
-    char** tokens;
+    char** commands;
     char* commentStart;
 
     while(continueloop == 0){
@@ -53,7 +52,7 @@ int main(int argc, char **argv) {
         if (commentStart != NULL){
             *commentStart = '\0';
         }
-        tokens = tokenify(buffer);
+       
 
     }
 
