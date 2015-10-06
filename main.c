@@ -11,8 +11,6 @@
 #include <poll.h>
 #include <signal.h>
 
-/* Hey Tom-O */
-
 
 char** tokenify(const char *s) {
     char* copy = strdup(s);
@@ -43,15 +41,21 @@ char** tokenify(const char *s) {
 
 int main(int argc, char **argv) {
     
-    
     char buffer[1024];
     int continueloop = 0;
+    char** tokens;
+    char* commentStart;
 
     while(continueloop == 0){
         printf("Type away: ");
         fgets(buffer, 1024, stdin);
-    }
+        commentStart = strchr(buffer, '#');   //remove all commented characters by ending string at the first #
+        if (commentStart != NULL){
+            *commentStart = '\0';
+        }
+        tokens = tokenify(buffer);
 
+    }
 
     return 0;
 }
