@@ -38,24 +38,25 @@ char** tokenify(const char *s, const char* delim) {
     return tokens;
 }
 
+void removeComments(char* input){
+    char* commentStart;
+    commentStart = strchr(input, '#');
+    if (commentStart != NULL){
+        *commentStart = '\0';
+    }
+}
+
 int main(int argc, char **argv) {
     const char* whitespace= " \t\n";
     char buffer[1024];
     int continueloop = 0;
     char** commands;
-    char* commentStart;
 
     while(continueloop == 0){
         printf("Type away: ");
         fgets(buffer, 1024, stdin);
-        commentStart = strchr(buffer, '#');   //remove all commented characters by ending string at the first #
-        if (commentStart != NULL){
-            *commentStart = '\0';
-        }
-       
-
+        removeComments(buffer);
     }
-
     return 0;
 }
 
