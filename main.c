@@ -11,7 +11,7 @@
 #include <poll.h>
 #include <signal.h>
 
-
+//Splits 's' up at each occurrence of 'delim.' Returns array of pieces.  
 char** tokenify(const char *s, const char* delim) {
     char* copy = strdup(s);
     char* token;
@@ -38,12 +38,19 @@ char** tokenify(const char *s, const char* delim) {
     return tokens;
 }
 
+//Replaces the first # with a null term char
 void removeComments(char* input){
     char* commentStart;
     commentStart = strchr(input, '#');
     if (commentStart != NULL){
         *commentStart = '\0';
     }
+}
+
+int arrLen(char** arr){
+    int i;
+    for(i = 0; arr[i] != NULL; i++){ } 
+    return i;
 }
 
 int main(int argc, char **argv) {
@@ -56,6 +63,10 @@ int main(int argc, char **argv) {
         printf("Type away: ");
         fgets(buffer, 1024, stdin);
         removeComments(buffer);
+        commands = tokenify(buffer, ";");
+        for (int i = 0; i < arrLen(commands); i++){
+            printf("Command %d: %s\n", i, commands[i]);
+        }
     }
     return 0;
 }
