@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <string.h>
+#include <stdbool.h>
 #include <ctype.h>
 #include <sys/resource.h>
 #include <sys/wait.h>
@@ -47,26 +48,50 @@ void removeComments(char* input){
     }
 }
 
+//check for built-in commands
+bool built_in(char** arguments, int* state){
+    if (strcmp(arguments[0], "mode") == 0){     
+        if (strcmp(arguments[1], "p") == 0){
+            *state = 1;
+            return true;
+        }
+        else if (strcmp(arguments[1], "s") == 0){
+            *state = 0;
+            return true;
+        }
+    }
+    else if (strcmp(arguments[0], "parallel") == 0){
+        *state = 1;
+        return true;
+    }
+    else if (strcmp(arguments[0], "sequential") == 0) {
+        *state = 0;
+        return true;
+    }
+    else if (strcmp(arguments[0], "exit") == 0) {
+        *state = 2;
+        return true;
+    }
+    return false;
+}
+
 //Parses commands sequentially
 int seqParse(char*** commands){
     const char* whitespace = " \t\n";
     char** arguments;
+    bool is_built_in = true;
     int state = 0;
     int* status = 0;
     pid_t pid;
     for (int i = 0; (*commands)[i] != NULL; i++){
         arguments = tokenify((*commands)[i], whitespace);
-        if (strcmp(arguments[0], "mode") == 0){         //check for built-in commands
-            if (strcmp(arguments[1], "p") == 0) state = 1;
-        }
-        else if (strcmp(arguments[0], "parallel") == 0)  state = 1;
-        else if (strcmp(arguments[0], "exit") == 0) state = 2;
-        else{
+        is_built_in = built_in(arguments, &state);
+        if (!is_built_in){
             pid = fork();
             if (pid == 0){   //child process
                 execv(arguments[0], arguments);     //execv the command
                 printf("Command not valid\n");      //if execv returns, command was invalid
-            exit(0);
+                exit(0);
             }
             else{   //parent process
                 waitpid(pid, status, 0);    // wait for child process to end
