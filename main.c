@@ -48,6 +48,13 @@ void removeComments(char* input){
     }
 }
 
+//used for output of tokenify
+int arrLen(char** arr){
+    int i;
+    for (i = 0; arr[i] != NULL; i++) { }
+    return i;
+}
+
 //check for built-in commands
 bool built_in(char** arguments, int* state){
     if (strcmp(arguments[0], "mode") == 0){     
@@ -102,27 +109,73 @@ int seqParse(char*** commands){
     return state;
 }
 
+//Parse in parallel,
+//prompt waits when parent has to print, otherwise it prints before child output
+int parParse(char*** commands){
+    const char* whitespace = " \t\n";
+    char** arguments;
+    bool is_built_in = true;
+    int state = 1;
+    int* status = 0;
+    pid_t pid;
+    int i;
+
+    for (i = 0; (*commands)[i] != NULL; i++){
+        arguments = tokenify((*commands)[i], whitespace);
+        is_built_in = built_in(arguments, &state);  //check if built in
+        if (!is_built_in){
+            pid = fork();       //create child process
+            if (pid == 0){
+                execv(arguments[0], arguments);
+                printf("Command not valid\n");
+                exit(0);
+            }
+        }
+        free(arguments);
+    }
+    
+    waitpid(-1, status, 0);     //wait for all child processes to end before returning
+    return state;
+}
+
+//sees if a string is empty
+bool is_empty(char* input){
+    char* temp = strdup(input);
+    char** tokens = tokenify(temp, " \n\t");
+    if (tokens[0] == NULL){
+        free(temp);
+        return true;
+    }
+    free(temp);
+    free(tokens);
+    return false;
+}
+
 int main(int argc, char **argv) {
     char buffer[1024];
     int continueloop = 0;
     char** commands;
     int state = 0; // 0 = sequential, 1 = parallel, 2 = exit
+    pid_t arr[50];
 
     while(continueloop == 0){
         if (state == 0) printf("\nOperating in sequential mode\n");
         else if (state == 1) printf("\nOperating in parallel mode\n");
         printf("Type away>> ");
         fgets(buffer, 1024, stdin);
+        if (is_empty(buffer)){
+            strcpy(buffer, "mode s");
+        }
         removeComments(buffer);
         commands = tokenify(buffer, ";");
         if (state == 0){
             state = seqParse(&commands);
         }
         else if (state == 1){
-            //state = parParse(&commands);
+            state = parParse(&commands);
         }
         if (state == 2){
-            printf("Goodbye");
+            printf("Goodbye\n");
             return 0;
         }
     }
