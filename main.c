@@ -111,12 +111,11 @@ int seqParse(char*** commands){
 
 //Parse in parallel,
 //prompt waits when parent has to print, otherwise it prints before child output
-int parParse(char*** commands){
+int parParse(char*** commands, pid_t* waitArr[]){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
     int state = 1;
-    int* status = 0;
     pid_t pid;
     int i;
 
@@ -130,11 +129,13 @@ int parParse(char*** commands){
                 printf("Command not valid\n");
                 exit(0);
             }
+            else{
+                (*waitArr)[i] = pid;
+            }
         }
         free(arguments);
     }
-    
-    waitpid(-1, status, 0);     //wait for all child processes to end before returning
+    waitArr[i] = 0; 
     return state;
 }
 
@@ -156,7 +157,8 @@ int main(int argc, char **argv) {
     int continueloop = 0;
     char** commands;
     int state = 0; // 0 = sequential, 1 = parallel, 2 = exit
-    pid_t arr[50];
+    pid_t* arr = malloc(50 * sizeof(pid_t));
+    int status = 0;
 
     while(continueloop == 0){
         if (state == 0) printf("\nOperating in sequential mode\n");
@@ -172,7 +174,10 @@ int main(int argc, char **argv) {
             state = seqParse(&commands);
         }
         else if (state == 1){
-            state = parParse(&commands);
+            state = parParse(&commands, &arr);
+            for (int i = 0; arr[i] != 0; i++){    //wait for all child processes to end before printing prompt
+                waitpid(arr[i], &status, 0);
+            }
         }
         if (state == 2){
             printf("Goodbye\n");
