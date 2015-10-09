@@ -55,6 +55,16 @@ int arrLen(char** arr){
     return i;
 }
 
+//used to free output of tokenify
+void freeTokens(char** tokens){
+    int i;
+    for (i = 0; i < arrLen(tokens); i++){
+        free(tokens[i]);
+    }
+    free(tokens[i]);
+    free(tokens);
+}
+
 //check for built-in commands
 bool built_in(char** arguments, int* state){
     if (strcmp(arguments[0], "mode") == 0){     
@@ -96,21 +106,21 @@ int seqParse(char*** commands){
         if (!is_built_in){
             pid = fork();
             if (pid == 0){   //child process
-                execv(arguments[0], arguments);     //execv the command
+                execv(arguments[0], arguments);//execv the command
+                freeTokens(arguments);
                 printf("Command not valid\n");      //if execv returns, command was invalid
                 exit(0);
             }
             else{   //parent process
                 waitpid(pid, status, 0);    // wait for child process to end
             }
-            free(arguments);
         }
+        freeTokens(arguments);
     }
     return state;
 }
 
-//Parse in parallel,
-//prompt waits when parent has to print, otherwise it prints before child output
+//Parse in parallel
 int parParse(char*** commands, pid_t* waitArr[]){
     const char* whitespace = " \t\n";
     char** arguments;
@@ -145,10 +155,11 @@ bool is_empty(char* input){
     char** tokens = tokenify(temp, " \n\t");
     if (tokens[0] == NULL){
         free(temp);
+        freeTokens(tokens);
         return true;
     }
     free(temp);
-    free(tokens);
+    freeTokens(tokens);
     return false;
 }
 
@@ -158,6 +169,7 @@ int main(int argc, char **argv) {
     char** commands;
     int state = 0; // 0 = sequential, 1 = parallel, 2 = exit
     pid_t* arr = malloc(50 * sizeof(pid_t));
+    arr[0] = 0;
     int status = 0;
 
     while(continueloop == 0){
@@ -178,12 +190,18 @@ int main(int argc, char **argv) {
             for (int i = 0; arr[i] != 0; i++){    //wait for all child processes to end before printing prompt
                 waitpid(arr[i], &status, 0);
             }
+            free(arr);
         }
         if (state == 2){
             printf("Goodbye\n");
+            freeTokens(commands);
+            free(arr);
             return 0;
         }
+        freeTokens(commands);
     }
+    freeTokens(commands);
+    free(arr);
     return 0;
 }
 
