@@ -136,6 +136,7 @@ int parParse(char*** commands, pid_t* waitArr[]){
             pid = fork();       //create child process
             if (pid == 0){
                 execv(arguments[0], arguments);
+                freeTokens(arguments);
                 printf("Command not valid\n");
                 exit(0);
             }
@@ -143,7 +144,7 @@ int parParse(char*** commands, pid_t* waitArr[]){
                 (*waitArr)[i] = pid;
             }
         }
-        free(arguments);
+        freeTokens(arguments);
     }
     waitArr[i] = 0; 
     return state;
@@ -195,13 +196,10 @@ int main(int argc, char **argv) {
         if (state == 2){
             printf("Goodbye\n");
             freeTokens(commands);
-            free(arr);
             return 0;
         }
         freeTokens(commands);
     }
-    freeTokens(commands);
-    free(arr);
     return 0;
 }
 
