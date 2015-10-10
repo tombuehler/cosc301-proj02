@@ -181,10 +181,14 @@ bool is_empty(char* input){
 }
 
 int main(int argc, char **argv) {
-    FILE* dir_file;
-    if (fopen("shell-config", "r") != NULL){    //file exists
+    FILE* dir_file = fopen("shell-config", "r");
+    if (dir_file != NULL){    //file exists
         dir_node* head = NULL;
         dir_node* current = head;
+        char currDir[1024];
+        while (fgets(currDir, 1024, dir_file) != NULL){
+            printf("%s", currDir);
+        }
     }
 
     char buffer[1024];
