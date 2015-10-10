@@ -109,8 +109,30 @@ bool built_in(char** arguments, int* state){
     return false;
 }
 
+//finds the correct path in shell-config, or does nothing
+void find_path(char** arguments, dir_node* dir_list){
+    struct stat statresult;
+    char* command = arguments[0];
+    int rv = stat(command, &statresult);
+    if (rv == 0){
+        execv(command, arguments);
+    }
+    dir_node* current = dir_list;
+    char root[1024];
+    while(current != NULL){
+        strcpy(root, current->dir);
+        strcat(root, "/");
+        strcat(root, command);
+        rv = stat(root, &statresult);
+        if (rv >= 0){
+            execv(root, arguments);
+        }
+        current = current->next;
+    }
+}
+
 //Parses commands sequentially
-void seqParse(char** commands, int* state, const dir_node* dir_list){
+void seqParse(char** commands, int* state, dir_node* dir_list){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
@@ -122,9 +144,9 @@ void seqParse(char** commands, int* state, const dir_node* dir_list){
         if (!is_built_in){
             pid = fork();
             if (pid == 0){   //child process
-                execv(arguments[0], arguments);//execv the command
+                find_path(arguments, dir_list);
                 freeTokens(arguments);
-                printf("Command not valid\n");      //if execv returns, command was invalid
+                printf("Command not valid\n");
                 exit(0);
             }
             else{   //parent process
@@ -143,7 +165,7 @@ void waitParallel(int* pidArr){
 }
 
 //Parse in parallel
-void parParse(char** commands, int* state, const dir_node* dir_list){
+void parParse(char** commands, int* state, dir_node* dir_list){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
@@ -157,8 +179,8 @@ void parParse(char** commands, int* state, const dir_node* dir_list){
         is_built_in = built_in(arguments, state);  //check if built in
         if (!is_built_in){
             pid = fork();       //create child process
-            if (pid == 0){
-                execv(arguments[0], arguments);
+            if (pid == 0){        
+                find_path(arguments, dir_list);
                 freeTokens(arguments);
                 printf("Command not valid\n");
                 exit(0);
@@ -213,7 +235,7 @@ int main(int argc, char **argv) {
     
     char buffer[1024];
     char** commands;
-    int state = 0; // 0 = sequential, 1 = parallel, 2 = exit    
+    int state = 0; // 0 = sequential, 1 = parallel, 2 = exit   
 
     while(true){
         if (state == 0) printf("\nOperating in sequential mode\n");
