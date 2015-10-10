@@ -176,6 +176,8 @@ bool is_empty(char* input){
 }
 
 int main(int argc, char **argv) {
+    FILE* dir_file;
+
     char buffer[1024];
     int continueloop = 0;
     char** commands;
