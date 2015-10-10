@@ -186,11 +186,7 @@ int main(int argc, char **argv) {
         if (state == 0) printf("\nOperating in sequential mode\n");
         else if (state == 1) printf("\nOperating in parallel mode\n");
         printf("Type away>> ");
-        fgets(buffer, 1024, stdin);
-        if (is_empty(buffer)){
-            printf("empty buffer\n");
-            strcpy(buffer, "mode s");
-        }
+        fgets(buffer, 1024, stdin); 
         removeComments(buffer);
         commands = tokenify(buffer, ";");
         if (state == 0){
