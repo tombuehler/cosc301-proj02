@@ -110,17 +110,15 @@ bool built_in(char** arguments, int* state){
 }
 
 //Parses commands sequentially
-int seqParse(char*** commands){
+void seqParse(char** commands, int* state, const dir_node* dir_list){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
-    int* status = 0;
     pid_t pid;
-    int state = 0;
 
-    for (int i = 0; (*commands)[i] != NULL; i++){
-        arguments = tokenify((*commands)[i], whitespace);
-        is_built_in = built_in(arguments, &state);
+    for (int i = 0; commands[i] != NULL; i++){
+        arguments = tokenify(commands[i], whitespace);
+        is_built_in = built_in(arguments, state);
         if (!is_built_in){
             pid = fork();
             if (pid == 0){   //child process
@@ -130,12 +128,11 @@ int seqParse(char*** commands){
                 exit(0);
             }
             else{   //parent process
-                waitpid(pid, status, 0);    // wait for child process to end
+                waitpid(pid, NULL, 0);    // wait for child process to end
             }
         }
         freeTokens(arguments);
     }
-    return state;
 }
 
 //waits for every pid in pid arr
@@ -146,19 +143,18 @@ void waitParallel(int* pidArr){
 }
 
 //Parse in parallel
-int parParse(char*** commands){
+void parParse(char** commands, int* state, const dir_node* dir_list){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
     pid_t pid;
     int i;
-    int state = 1;
-    pid_t waitArr[arrLen(*commands)];
-    memset(waitArr, 0, (arrLen(*commands)+1)*sizeof(pid_t));
+    pid_t waitArr[arrLen(commands)];
+    memset(waitArr, 0, (arrLen(commands)+1)*sizeof(pid_t));
 
-    for (i = 0; (*commands)[i] != NULL; i++){
-        arguments = tokenify((*commands)[i], whitespace);
-        is_built_in = built_in(arguments, &state);  //check if built in
+    for (i = 0; (commands)[i] != NULL; i++){
+        arguments = tokenify(commands[i], whitespace);
+        is_built_in = built_in(arguments, state);  //check if built in
         if (!is_built_in){
             pid = fork();       //create child process
             if (pid == 0){
@@ -175,7 +171,6 @@ int parParse(char*** commands){
     }
 
     waitParallel(waitArr);
-    return state;
 }
 
 //sees if a string is empty
@@ -192,7 +187,9 @@ bool is_empty(char* input){
     return false;
 }
 
+//initializes the linked list, loading a directory into each node
 dir_node* init_list(FILE* dir_file){
+    if (dir_file == NULL) return NULL;  //file doesn't exist
     dir_node* head = NULL;
     dir_node* current = head;
     char currDir[1024];
@@ -212,11 +209,8 @@ dir_node* init_list(FILE* dir_file){
 
 int main(int argc, char **argv) {
     FILE* dir_file = fopen("shell-config", "r");
-    dir_node* dir_list;
-    if (dir_file != NULL){    //file exists
-        dir_list = init_list(dir_file);        
-    }  
-
+    dir_node* dir_list = init_list(dir_file);
+    
     char buffer[1024];
     char** commands;
     int state = 0; // 0 = sequential, 1 = parallel, 2 = exit    
@@ -229,10 +223,10 @@ int main(int argc, char **argv) {
         endStr(buffer, '#');
         commands = tokenify(buffer, ";");
         if (state == 0){
-            state = seqParse(&commands);
+            seqParse(commands, &state, dir_list);
         }
         else if (state == 1){
-            state = parParse(&commands); 
+            parParse(commands, &state, dir_list); 
         }
         if (state == 2){
             printf("Goodbye\n");
