@@ -121,6 +121,13 @@ int seqParse(char*** commands){
     return state;
 }
 
+//waits for every pid in pid arr
+void waitParallel(int* pidArr){
+    for(int i = 0; pidArr[i] != 0; i++){    
+        waitpid(pidArr[i], NULL, 0);
+    }
+}
+
 //Parse in parallel
 int parParse(char*** commands){
     const char* whitespace = " \t\n";
@@ -130,6 +137,7 @@ int parParse(char*** commands){
     int i;
     int state = 1;
     pid_t waitArr[arrLen(*commands)];
+    memset(waitArr, 0, (arrLen(*commands)+1)*sizeof(pid_t));
 
     for (i = 0; (*commands)[i] != NULL; i++){
         arguments = tokenify((*commands)[i], whitespace);
@@ -148,10 +156,8 @@ int parParse(char*** commands){
         }
         freeTokens(arguments);
     }
-    waitArr[i] = 0;
-    for(int j = 0; waitArr[j] != 0; j++){
-        waitpid(waitArr[j], NULL, 0);
-    }
+
+    waitParallel(waitArr);
     return state;
 }
 
