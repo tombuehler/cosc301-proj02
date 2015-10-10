@@ -13,7 +13,7 @@
 #include <signal.h>
 
 struct _dir_node{
-    char* dir[1024];
+    char dir[1024];
     struct _dir_node* next;
 }; typedef struct _dir_node dir_node;
 
@@ -192,17 +192,30 @@ bool is_empty(char* input){
     return false;
 }
 
-int main(int argc, char **argv) {
-/*    FILE* dir_file = fopen("shell-config", "r");
-    if (dir_file != NULL){    //file exists
-        dir_node* head = NULL;
-        dir_node* current = head;
-        char currDir[1024];
-        while (fgets(currDir, 1024, dir_file) != NULL){
-            current = malloc(sizeof(dir_node));
-//            strpy(current->dir, str
+dir_node* init_list(FILE* dir_file){
+    dir_node* head = NULL;
+    dir_node* current = head;
+    char currDir[1024];
+    while (fgets(currDir, 1024, dir_file) != NULL){
+        endStr(currDir, '\n');
+        if (head == NULL){
+            head = malloc(sizeof(dir_node));
+            current = head;
         }
-    }  */
+        strcpy(current->dir, currDir);
+        current->next = malloc(sizeof(dir_node));
+        current = current->next;
+    }
+    current = NULL;
+    return head;
+}
+
+int main(int argc, char **argv) {
+    FILE* dir_file = fopen("shell-config", "r");
+    dir_node* dir_list;
+    if (dir_file != NULL){    //file exists
+        dir_list = init_list(dir_file);        
+    }  
 
     char buffer[1024];
     int continueloop = 0;
@@ -218,7 +231,6 @@ int main(int argc, char **argv) {
             printf("empty buffer\n");
             strcpy(buffer, "mode s");
         }
-//        removeComments(buffer);
         endStr(buffer, '#');
         commands = tokenify(buffer, ";");
         if (state == 0){
