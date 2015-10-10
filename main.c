@@ -12,6 +12,11 @@
 #include <poll.h>
 #include <signal.h>
 
+struct _dir_node{
+    char* dir[1024];
+    struct _dir_node* next;
+}; typedef struct _dir_node dir_node;
+
 //Splits 's' up at each occurrence of 'delim.' Returns array of pieces.  
 char** tokenify(const char *s, const char* delim) {
     char* copy = strdup(s);
@@ -177,6 +182,10 @@ bool is_empty(char* input){
 
 int main(int argc, char **argv) {
     FILE* dir_file;
+    if (fopen("shell-config", "r") != NULL){    //file exists
+        dir_node* head = NULL;
+        dir_node* current = head;
+    }
 
     char buffer[1024];
     int continueloop = 0;
