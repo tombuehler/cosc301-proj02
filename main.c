@@ -97,9 +97,10 @@ int seqParse(char*** commands){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
-    int state = 0;
     int* status = 0;
     pid_t pid;
+    int state = 0;
+
     for (int i = 0; (*commands)[i] != NULL; i++){
         arguments = tokenify((*commands)[i], whitespace);
         is_built_in = built_in(arguments, &state);
@@ -121,13 +122,14 @@ int seqParse(char*** commands){
 }
 
 //Parse in parallel
-int parParse(char*** commands, pid_t* waitArr[]){
+int parParse(char*** commands){
     const char* whitespace = " \t\n";
     char** arguments;
     bool is_built_in = true;
-    int state = 1;
     pid_t pid;
     int i;
+    int state = 1;
+    pid_t waitArr[arrLen(*commands)];
 
     for (i = 0; (*commands)[i] != NULL; i++){
         arguments = tokenify((*commands)[i], whitespace);
@@ -141,12 +143,15 @@ int parParse(char*** commands, pid_t* waitArr[]){
                 exit(0);
             }
             else{
-                (*waitArr)[i] = pid;
+                waitArr[i] = pid;
             }
         }
         freeTokens(arguments);
     }
-    waitArr[i] = 0; 
+    waitArr[i] = 0;
+    for(int j = 0; waitArr[j] != 0; j++){
+        waitpid(waitArr[j], NULL, 0);
+    }
     return state;
 }
 
@@ -168,10 +173,7 @@ int main(int argc, char **argv) {
     char buffer[1024];
     int continueloop = 0;
     char** commands;
-    int state = 0; // 0 = sequential, 1 = parallel, 2 = exit
-    pid_t* arr = malloc(50 * sizeof(pid_t));
-    arr[0] = 0;
-    int status = 0;
+    int state = 0; // 0 = sequential, 1 = parallel, 2 = exit    
 
     while(continueloop == 0){
         if (state == 0) printf("\nOperating in sequential mode\n");
@@ -179,6 +181,7 @@ int main(int argc, char **argv) {
         printf("Type away>> ");
         fgets(buffer, 1024, stdin);
         if (is_empty(buffer)){
+            printf("empty buffer\n");
             strcpy(buffer, "mode s");
         }
         removeComments(buffer);
@@ -187,18 +190,14 @@ int main(int argc, char **argv) {
             state = seqParse(&commands);
         }
         else if (state == 1){
-            state = parParse(&commands, &arr);
-            for (int i = 0; arr[i] != 0; i++){    //wait for all child processes to end before printing prompt
-                waitpid(arr[i], &status, 0);
-            }
-            free(arr);
+            state = parParse(&commands); 
         }
         if (state == 2){
             printf("Goodbye\n");
             freeTokens(commands);
             return 0;
         }
-        freeTokens(commands);
+       freeTokens(commands);
     }
     return 0;
 }
