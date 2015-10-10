@@ -67,6 +67,7 @@ void freeTokens(char** tokens){
 
 //check for built-in commands
 bool built_in(char** arguments, int* state){
+    if (arguments[0] == NULL)   return false;
     if (strcmp(arguments[0], "mode") == 0){     
         if (strcmp(arguments[1], "p") == 0){
             *state = 1;
