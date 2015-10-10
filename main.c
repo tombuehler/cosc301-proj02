@@ -53,6 +53,15 @@ void removeComments(char* input){
     }
 }
 
+//Replaces first 'term' with null term char
+void endStr(char* input, char term){
+    char* end;
+    end = strchr(input, term);
+    if (end != NULL){
+        *end = '\0';
+    }
+}
+
 //used for output of tokenify
 int arrLen(char** arr){
     int i;
@@ -72,6 +81,9 @@ void freeTokens(char** tokens){
 
 //check for built-in commands
 bool built_in(char** arguments, int* state){
+    if (arguments[0] == NULL) {
+        return false;
+    }
     if (strcmp(arguments[0], "mode") == 0){     
         if (strcmp(arguments[1], "p") == 0){
             *state = 1;
@@ -181,15 +193,16 @@ bool is_empty(char* input){
 }
 
 int main(int argc, char **argv) {
-    FILE* dir_file = fopen("shell-config", "r");
+/*    FILE* dir_file = fopen("shell-config", "r");
     if (dir_file != NULL){    //file exists
         dir_node* head = NULL;
         dir_node* current = head;
         char currDir[1024];
         while (fgets(currDir, 1024, dir_file) != NULL){
-            printf("%s", currDir);
+            current = malloc(sizeof(dir_node));
+//            strpy(current->dir, str
         }
-    }
+    }  */
 
     char buffer[1024];
     int continueloop = 0;
@@ -205,7 +218,8 @@ int main(int argc, char **argv) {
             printf("empty buffer\n");
             strcpy(buffer, "mode s");
         }
-        removeComments(buffer);
+//        removeComments(buffer);
+        endStr(buffer, '#');
         commands = tokenify(buffer, ";");
         if (state == 0){
             state = seqParse(&commands);
