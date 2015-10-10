@@ -218,19 +218,14 @@ int main(int argc, char **argv) {
     }  
 
     char buffer[1024];
-    int continueloop = 0;
     char** commands;
     int state = 0; // 0 = sequential, 1 = parallel, 2 = exit    
 
-    while(continueloop == 0){
+    while(true){
         if (state == 0) printf("\nOperating in sequential mode\n");
         else if (state == 1) printf("\nOperating in parallel mode\n");
         printf("Type away>> ");
         fgets(buffer, 1024, stdin);
-        if (is_empty(buffer)){
-            printf("empty buffer\n");
-            strcpy(buffer, "mode s");
-        }
         endStr(buffer, '#');
         commands = tokenify(buffer, ";");
         if (state == 0){
